@@ -14,5 +14,6 @@ import lombok.Setter;
 public class HistoryResponseDto implements Serializable {
 
     private String domainName;
+    private Integer categoryAmount;
     private Set<String> categoryNames;
 }

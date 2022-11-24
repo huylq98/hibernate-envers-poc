@@ -1,15 +1,16 @@
 package vn.com.viettel.vds.vm2.pochibernateenvers.entity;
 
+import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
+import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @Audited
+@AuditTable("category_audit")
 public class Category extends AuditTrail {
 
     @Id
@@ -39,6 +41,29 @@ public class Category extends AuditTrail {
     @Column(name = "name")
     private String name;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
+    @JoinColumn(name = "domain_id")
     private Domain domain;
+
+    public void setName(String name) {
+        if (name != null) {
+            this.name = name;
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || obj.getClass() != this.getClass()) {
+            return false;
+        }
+        return Objects.equals(((Category) obj).getId(), this.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -24,17 +26,19 @@ public class AuditTrail implements Serializable {
 
     @Column(name = "created_at", updatable = false)
     @CreatedDate
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "created_by", updatable = false)
     @CreatedBy
     private String createdBy;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false)
     @LastModifiedDate
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @Column(name = "updated_by")
+    @Column(name = "updated_by", insertable = false)
     @LastModifiedBy
     private String updatedBy;
 }

@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 import vn.com.viettel.vds.vm2.pochibernateenvers.dto.request.DomainRequestDto;
-import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.HistoryResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.DomainResponseDto;
+import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.HistoryResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.service.DomainService;
 
 @RestController

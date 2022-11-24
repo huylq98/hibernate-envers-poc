@@ -1,5 +1,7 @@
 package vn.com.viettel.vds.vm2.pochibernateenvers.entity;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -10,6 +12,8 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Version;
+import org.hibernate.envers.AuditMappedBy;
+import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +29,7 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @Audited
+@AuditTable("domain_audit")
 public class Domain extends AuditTrail {
 
     @Id
@@ -42,6 +47,30 @@ public class Domain extends AuditTrail {
     @Column(name = "category_amount")
     private Integer categoryAmount;
 
-    @OneToMany(mappedBy = "domain", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "domain", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @AuditMappedBy(mappedBy = "domain")
     private Set<Category> categories;
+
+    public void setName(String name) {
+        if (name != null) {
+            this.name = name;
+        }
+    }
+
+    public void setCategoryAmount(Integer categoryAmount) {
+        if (categoryAmount != null) {
+            this.categoryAmount = categoryAmount;
+        }
+    }
+
+    public void addCategories(Collection<Category> categories) {
+        if (categories == null || categories.isEmpty()) {
+            return;
+        }
+        if (this.categories == null) {
+            this.categories = new HashSet<>();
+        }
+        categories.forEach(category -> category.setDomain(this));
+        this.categories.addAll(categories);
+    }
 }
