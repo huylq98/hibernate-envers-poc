@@ -48,7 +48,7 @@ public class Domain extends AuditTrail {
     @Column(name = "category_amount")
     private Integer categoryAmount;
 
-    @OneToMany(mappedBy = "domain", cascade = {CascadeType.MERGE, CascadeType.PERSIST}, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "domain", cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     @AuditMappedBy(mappedBy = "domain")
     private Set<Category> categories;
 
