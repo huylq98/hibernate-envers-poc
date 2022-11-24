@@ -2,7 +2,6 @@ package vn.com.viettel.vds.vm2.pochibernateenvers.service.impl;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -44,6 +43,8 @@ public class DomainServiceImpl implements DomainService {
         Domain domain = domainMapper.toEntity(request);
         if (request.getId() != null) {
             domain = mergeDomain(domain);
+        } else {
+            domain = domainRepository.save(domain);
         }
         domain.addCategories(mergeCategories(domainMapper.toEntity(request).getCategories()));
         domain = domainRepository.saveAndFlush(domain);
@@ -60,17 +61,16 @@ public class DomainServiceImpl implements DomainService {
     }
 
     private Set<Category> mergeCategories(Set<Category> categories) {
-        Iterator<Category> categoryIterator = categories.iterator(); // Use iterator to avoid ConcurrentModificationException
-        while (categoryIterator.hasNext()) {
-            Category category = categoryIterator.next();
+        Set<Category> mergedCategories = new HashSet<>(categories); // Use duplicate set to avoid ConcurrentModificationException
+        for (Category category : categories) {
             if (category.getId() != null) {
                 Category mergedCategory = categoryRepository.findById(category.getId()).orElse(category);
                 mergedCategory.setName(category.getName());
-                categories.remove(category); // Remove unmerged category
-                categories.add(mergedCategory);
+                mergedCategories.remove(category); // Remove unmerged category
+                mergedCategories.add(mergedCategory);
             }
         }
-        return categories;
+        return mergedCategories;
     }
 
     @Override
