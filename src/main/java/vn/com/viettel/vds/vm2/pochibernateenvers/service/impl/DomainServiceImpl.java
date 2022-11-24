@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.persistence.EntityNotFoundException;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
@@ -87,7 +88,7 @@ public class DomainServiceImpl implements DomainService {
             .getResultList();
         List<String> categoryAuditLogs = auditReader.createQuery()
             .forRevisionsOfEntity(Category.class, true, true)
-            .add(AuditEntity.property("domainId").eq(domainId))
+            .add(AuditEntity.property("domain").eq(domainRepository.findById(domainId).orElseThrow(EntityNotFoundException::new)))
             .addProjection(AuditEntity.property("name"))
             .getResultList();
         return domainAuditLogs.stream()
