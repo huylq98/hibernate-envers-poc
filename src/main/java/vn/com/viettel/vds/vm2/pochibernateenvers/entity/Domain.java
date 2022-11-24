@@ -47,7 +47,7 @@ public class Domain extends AuditTrail {
     @Column(name = "category_amount")
     private Integer categoryAmount;
 
-    @OneToMany(mappedBy = "domain", cascade = {CascadeType.MERGE})
+    @OneToMany(mappedBy = "domain", cascade = {CascadeType.MERGE, CascadeType.REMOVE})
     @AuditMappedBy(mappedBy = "domain")
     private Set<Category> categories;
 

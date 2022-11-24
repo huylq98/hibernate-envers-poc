@@ -3,10 +3,10 @@ package vn.com.viettel.vds.vm2.pochibernateenvers.service.impl;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-import javax.persistence.EntityNotFoundException;
 import org.hibernate.envers.AuditReader;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +17,7 @@ import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.DomainResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.HistoryResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.entity.Category;
 import vn.com.viettel.vds.vm2.pochibernateenvers.entity.Domain;
+import vn.com.viettel.vds.vm2.pochibernateenvers.entity.RevEntity;
 import vn.com.viettel.vds.vm2.pochibernateenvers.mapper.DomainMapper;
 import vn.com.viettel.vds.vm2.pochibernateenvers.repository.CategoryRepository;
 import vn.com.viettel.vds.vm2.pochibernateenvers.repository.DomainRepository;
@@ -46,7 +47,10 @@ public class DomainServiceImpl implements DomainService {
         } else {
             domain = domainRepository.save(domain);
         }
-        domain.addCategories(mergeCategories(domainMapper.toEntity(request).getCategories()));
+        Set<Category> categories = domainMapper.toEntity(request).getCategories();
+        if (categories != null && !categories.isEmpty()) {
+            domain.addCategories(mergeCategories(categories));
+        }
         domain = domainRepository.saveAndFlush(domain);
         log.info("Transaction is flushed!");
         // Throw exception here for rollback demonstration
@@ -81,24 +85,29 @@ public class DomainServiceImpl implements DomainService {
     @Override
     public List<HistoryResponseDto> getHistory(Long domainId) {
         List<Object[]> domainAuditLogs = auditReader.createQuery()
-            .forRevisionsOfEntity(Domain.class, true, true)
+            .forRevisionsOfEntity(Domain.class, false, true)
             .add(AuditEntity.id().eq(domainId))
-            .addProjection(AuditEntity.property("name"))
-            .addProjection(AuditEntity.property("categoryAmount"))
             .getResultList();
-        List<String> categoryAuditLogs = auditReader.createQuery()
-            .forRevisionsOfEntity(Category.class, true, true)
-            .add(AuditEntity.property("domain").eq(domainRepository.findById(domainId).orElseThrow(EntityNotFoundException::new)))
-            .addProjection(AuditEntity.property("name"))
+        List<Object[]> categoryAuditLogs = auditReader.createQuery()
+            .forRevisionsOfEntity(Category.class, false, true)
+            .add(AuditEntity.relatedId("domain").eq(domainId))
             .getResultList();
-        return domainAuditLogs.stream()
-            .map(domainAuditLog ->
-                HistoryResponseDto.builder()
-                    .domainName((String) domainAuditLog[0])
-                    .categoryAmount((Integer) domainAuditLog[1])
-                    .categoryNames(new HashSet<>(categoryAuditLogs))
-                    .build()
-            )
-            .collect(Collectors.toList());
+        List<HistoryResponseDto> historyResponseDtos = new ArrayList<>();
+        for (Object[] domainAuditLog : domainAuditLogs) {
+            HistoryResponseDto historyResponseDto = HistoryResponseDto.builder()
+                .revision(((RevEntity) domainAuditLog[1]).getId())
+                .revisionType((RevisionType) domainAuditLog[2])
+                .domainName(((Domain) domainAuditLog[0]).getName())
+                .build();
+            Set<String> categoryNames = new HashSet<>();
+            for (Object[] categoryAuditLog : categoryAuditLogs) {
+                if (Objects.equals(categoryAuditLog[1], domainAuditLog[1])) {
+                    categoryNames.add(((Category) categoryAuditLog[0]).getName());
+                }
+            }
+            historyResponseDto.setCategoryNames(categoryNames);
+            historyResponseDtos.add(historyResponseDto);
+        }
+        return historyResponseDtos;
     }
 }
