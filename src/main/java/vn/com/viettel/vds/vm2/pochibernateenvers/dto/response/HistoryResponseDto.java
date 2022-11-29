@@ -2,7 +2,7 @@ package vn.com.viettel.vds.vm2.pochibernateenvers.dto.response;
 
 import java.io.Serializable;
 import java.util.Set;
-import org.hibernate.envers.RevisionType;
+import org.springframework.data.history.RevisionMetadata.RevisionType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @Setter
 @SuperBuilder
-@Audited
+@Audited(withModifiedFlag = true)
 @AuditTable("domain_audit")
 public class Domain extends AuditTrail {
 

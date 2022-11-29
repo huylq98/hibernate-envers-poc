@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.hibernate.envers.AuditReader;
-import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;
+import org.springframework.data.history.Revision;
+import org.springframework.data.history.Revisions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,6 @@ import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.DomainResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.dto.response.HistoryResponseDto;
 import vn.com.viettel.vds.vm2.pochibernateenvers.entity.Category;
 import vn.com.viettel.vds.vm2.pochibernateenvers.entity.Domain;
-import vn.com.viettel.vds.vm2.pochibernateenvers.entity.RevEntity;
 import vn.com.viettel.vds.vm2.pochibernateenvers.mapper.DomainMapper;
 import vn.com.viettel.vds.vm2.pochibernateenvers.repository.CategoryRepository;
 import vn.com.viettel.vds.vm2.pochibernateenvers.repository.DomainRepository;
@@ -84,24 +84,21 @@ public class DomainServiceImpl implements DomainService {
 
     @Override
     public List<HistoryResponseDto> getHistory(Long domainId) {
-        List<Object[]> domainAuditLogs = auditReader.createQuery()
-            .forRevisionsOfEntity(Domain.class, false, true)
-            .add(AuditEntity.id().eq(domainId))
-            .getResultList();
+        Revisions<Long, Domain> domainRevisions = domainRepository.findRevisions(domainId);
         List<Object[]> categoryAuditLogs = auditReader.createQuery()
             .forRevisionsOfEntity(Category.class, false, true)
             .add(AuditEntity.relatedId("domain").eq(domainId))
             .getResultList();
         List<HistoryResponseDto> historyResponseDtos = new ArrayList<>();
-        for (Object[] domainAuditLog : domainAuditLogs) {
+        for (Revision<Long, Domain> domainRevision : domainRevisions.getContent()) {
             HistoryResponseDto historyResponseDto = HistoryResponseDto.builder()
-                .revision(((RevEntity) domainAuditLog[1]).getId())
-                .revisionType((RevisionType) domainAuditLog[2])
-                .domainName(((Domain) domainAuditLog[0]).getName())
+                .revision(domainRevision.getRevisionNumber().orElse(null))
+                .revisionType(domainRevision.getMetadata().getRevisionType())
+                .domainName(domainRevision.getEntity().getName())
                 .build();
             Set<String> categoryNames = new HashSet<>();
             for (Object[] categoryAuditLog : categoryAuditLogs) {
-                if (Objects.equals(categoryAuditLog[1], domainAuditLog[1])) {
+                if (Objects.equals(categoryAuditLog[1], domainRevision.getRevisionNumber().orElse(null))) {
                     categoryNames.add(((Category) categoryAuditLog[0]).getName());
                 }
             }
